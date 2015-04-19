@@ -28,6 +28,7 @@ it freely, subject to the following restrictions:
 *********************************************************************/
 
 #include <tmx/MapLayer.h>
+#include <assert.h>
 
 using namespace tmx;
 ///------TileQuad-----///
@@ -55,6 +56,19 @@ LayerSet::LayerSet(const sf::Texture& texture)
 	m_visible	(true)
 {
 
+}
+
+TileQuad::Ptr LayerSet::AddTileToGrid(sf::Vertex vt0, sf::Vertex vt1, sf::Vertex vt2, sf::Vertex vt3, uint x, uint y){
+    if (m_tilesGrid.size() <= x + 1)
+        m_tilesGrid.resize(x+10000);
+    if (m_tilesGrid.at(0).size() < y + 1){
+        for(uint i=0; i<m_tilesGrid.size(); i++){
+            m_tilesGrid.at(i).resize(y+1);
+        }
+    }
+   // std::cout<< "x: " << x << "y: " << y << "xs: " << m_tilesGrid.size() << std::endl;
+    m_tilesGrid.at(x).at(y) = AddTile(vt0, vt1, vt2, vt3);
+    return m_tilesGrid.at(x).at(y);
 }
 
 TileQuad::Ptr LayerSet::AddTile(sf::Vertex vt0, sf::Vertex vt1, sf::Vertex vt2, sf::Vertex vt3)
@@ -92,7 +106,7 @@ void LayerSet::draw(sf::RenderTarget& rt, sf::RenderStates states) const
 {
 	for(auto& q : m_quads)
 	{
-		if(q->m_needsUpdate)
+		if(q->m_needsUpdate && false)
 		{
 			for(auto& i : q->m_indices)
 			{
@@ -101,11 +115,46 @@ void LayerSet::draw(sf::RenderTarget& rt, sf::RenderStates states) const
 			q->m_needsUpdate = false;
 		}
 	}
-	
+
 	if(!m_vertices.empty() && m_visible)
 	{
 		states.texture = &m_texture;
-		rt.draw(&m_vertices[0], static_cast<unsigned int>(m_vertices.size()), sf::Quads, states);
+
+        if (!m_tilesGrid.empty()){
+
+            // TODO: PASS TILE SIZE TO LAYERSET
+            // TILE SIZE IS CURRENTLY FIXED TO 48x48
+
+            // CALCULATE WHICH TILES TO DISPLAY
+            int x = ((rt.getView().getCenter().x - rt.getView().getSize().x*0.5f)/48.0);
+            if (x<0)
+                x = 0;
+
+            int xmax = (rt.getView().getCenter().x + rt.getView().getSize().x*0.5f)/48.0 + 1;
+            if (xmax > m_tilesGrid.size())
+                xmax = m_tilesGrid.size();
+
+            for (; x<xmax; x++){
+
+                int y = ((rt.getView().getCenter().y - rt.getView().getSize().y*0.5f)/48.0);
+                if (y<0)
+                    y = 0;
+
+                int ymax = (rt.getView().getCenter().y + rt.getView().getSize().y*0.5f)/48.0 + 1;
+                if (ymax > m_tilesGrid[x].size())
+                    ymax = m_tilesGrid[x].size();
+
+                for (; y<ymax; y++){
+                    if (m_tilesGrid.at(x).at(y) != NULL){
+                        TileQuad* tq = m_tilesGrid[x][y].get();
+                        // DRAWS ONE TILE AT X AND Y
+                        rt.draw(&m_vertices.at(tq->m_indices[0]), 4, sf::Quads, states);
+                    }
+                }
+            }
+       }
+        else
+            rt.draw(&m_vertices[0], static_cast<unsigned int>(m_vertices.size()), sf::Quads, states);
 	}
 }
 

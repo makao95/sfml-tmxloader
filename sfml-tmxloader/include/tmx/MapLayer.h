@@ -53,16 +53,18 @@ namespace tmx
 	//drawable composed of vertices representing a set of tiles on a layer
 	class LayerSet final : public sf::Drawable
 	{
-	public:	
+	public:
 
-		LayerSet(const sf::Texture& texture);
-		TileQuad::Ptr AddTile(sf::Vertex vt0, sf::Vertex vt1, sf::Vertex vt2, sf::Vertex vt3);
+        LayerSet(const sf::Texture& texture);
+        TileQuad::Ptr AddTile(sf::Vertex vt0, sf::Vertex vt1, sf::Vertex vt2, sf::Vertex vt3);
+        TileQuad::Ptr AddTileToGrid(sf::Vertex vt0, sf::Vertex vt1, sf::Vertex vt2, sf::Vertex vt3, uint x, uint y);
 		void Cull(const sf::FloatRect& bounds);
 
 	private:
 		const sf::Texture& m_texture;
 		mutable std::vector<TileQuad::Ptr> m_quads;
 		mutable std::vector<sf::Vertex> m_vertices;
+        std::vector< std::vector<TileQuad::Ptr> > m_tilesGrid;
 		void draw(sf::RenderTarget& rt, sf::RenderStates states) const;
 
 		sf::FloatRect m_boundingBox;
@@ -89,7 +91,7 @@ namespace tmx
 		{
 			Front,
 			Back,
-			Debug,
+            Debug,
 			All
 		};
 
@@ -98,6 +100,7 @@ namespace tmx
 		std::string name;
 		float opacity; //range 0 - 1
 		bool visible;
+       // sf::Vector2i tileSize;
 		MapTiles tiles;
 		MapObjects objects; //vector of objects if layer is object group
 		MapLayerType type;

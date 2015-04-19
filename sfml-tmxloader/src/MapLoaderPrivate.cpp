@@ -595,7 +595,7 @@ TileQuad::Ptr MapLoader::m_AddTileToLayer(MapLayer& layer, sf::Uint16 x, sf::Uin
 	}
 
 	//add tile to set
-	return layer.layerSets[id]->AddTile(v0, v1, v2, v3);
+    return layer.layerSets[id]->AddTileToGrid(v0, v1, v2, v3, x, y);
 }
 
 bool MapLoader::m_ParseObjectgroup(const pugi::xml_node& groupNode)
